@@ -5,9 +5,37 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
   },
+  labels: {
+    singular: {
+      en: 'User',
+      ru: 'Пользователь',
+    },
+    plural: {
+      en: 'Users',
+      ru: 'Пользователи',
+    }
+  },
   auth: true,
   fields: [
-    // Email added by default
-    // Add more fields as needed
+    {
+      name: 'firstName',
+      type: 'text',
+      index: false,
+      required: true,
+      label: {
+        en: 'First Name',
+        ru: 'Имя'
+      }
+    },
+    {
+      name: 'lastName',
+      type: 'text',
+      index: false,
+      required: true,
+      label: {
+        en: 'Last Name',
+        ru: 'Фамилия'
+      }
+    },
   ],
 }
