@@ -5,7 +5,7 @@ module.exports = {
             port: '4208',
             exec_mode: 'cluster',
             instances: 'max',
-            script: './.output/server/index.mjs',
+            script: './dist/server.js',
         }
     ]
 }
