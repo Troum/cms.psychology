@@ -2,14 +2,14 @@ module.exports = {
   apps: [
     {
       name: 'cms-psychology',
-      script: 'node_modules/next/dist/bin/next',
-      args: 'start -p 4208',
+      script: 'pnpm',
+      args: 'run dev',
       cwd: '/var/www/cms.psychology',
-      interpreter: 'node',
+      interpreter: 'none',
       exec_mode: 'fork',
-      instances: 1,
+      watch: false,
       env: {
-        NODE_ENV: 'production',
+        NODE_ENV: 'development',
         NODE_OPTIONS: '--no-deprecation',
         PORT: 4208
       },
