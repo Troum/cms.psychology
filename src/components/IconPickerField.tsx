@@ -16,3 +16,4 @@ const IconPickerClient = dynamic(
 export const IconPickerField: TextFieldClientComponent = (props) => {
   return <IconPickerClient {...props} />
 }
+

@@ -27,7 +27,7 @@ export default async function HomePage() {
             width={65}
           />
         </picture>
-        {!user && <h1>Welcome to your new project.</h1>}
+        {!user && <h1>Добро пожаловать в проект</h1>}
         {user && <h1>Здравствуйте, {user.email}</h1>}
         <div className="links">
           <a
