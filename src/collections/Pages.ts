@@ -27,7 +27,7 @@ export const Pages: CollectionConfig = {
         ru: 'Контент страницы "Обо мне"',
       },
       admin: {
-        condition: (_, siblingData) => siblingData?.slug === 'about',
+        condition: (data) => data?.slug === 'about',
         description: {
           en: 'These fields are used by the Nuxt /about page layout.',
           ru: 'Эти поля используются Nuxt-страницей /about (верстка остаётся как сейчас).',
@@ -68,7 +68,6 @@ export const Pages: CollectionConfig = {
           name: 'sections',
           type: 'array',
           required: false,
-          localized: true,
           label: {
             en: 'Text sections',
             ru: 'Текстовые блоки',
@@ -78,6 +77,7 @@ export const Pages: CollectionConfig = {
               name: 'text',
               type: 'textarea',
               required: true,
+              localized: true,
               label: {
                 en: 'Text',
                 ru: 'Текст',
