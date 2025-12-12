@@ -1,49 +1,128 @@
-name: Deploy
+name: Deploy (SSH + PM2)
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 concurrency:
-  group: deploy-production
+  group: production-deploy
   cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     environment: production
+    env:
+      SSH_IP: ${{ secrets.SSH_IP }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
+      SSH_PASS: ${{ secrets.SSH_PASS }}
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      DEPLOY_PATH: ${{ secrets.SSH_PATH }}
+
+      DEPLOY_BRANCH: main
+      NODE_VERSION: '22'
 
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Deploy over SSH (password)
+        uses: appleboy/ssh-action@v1.2.2
+        if: ${{ env.SSH_PASS != '' }}
         with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: ${{ secrets.SSH_PORT || 22 }}
+          host: ${{ env.SSH_IP }}
+          username: ${{ env.SSH_USER }}
+          password: ${{ env.SSH_PASS }}
+          port: ${{ env.SSH_PORT || 22 }}
           script_stop: true
+          envs: DEPLOY_PATH,DEPLOY_BRANCH,NODE_VERSION
           script: |
             set -euo pipefail
 
-            DEPLOY_PATH="${{ secrets.DEPLOY_PATH || '/var/www/cms.psychology' }}"
+            : "${DEPLOY_PATH:?Missing DEPLOY_PATH}"
+            : "${DEPLOY_BRANCH:=main}"
+            : "${NODE_VERSION:=22}"
+
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
+              echo "Deploy path is not a git repository: $DEPLOY_PATH" >&2
+              exit 1
+            fi
 
             cd "$DEPLOY_PATH"
 
-            echo "==> Updating repo"
-            git fetch origin
-            git reset --hard "origin/main"
+            export NVM_DIR="$HOME/.nvm"
+            if [ -s "$NVM_DIR/nvm.sh" ]; then
+              . "$NVM_DIR/nvm.sh"
+              nvm install "${NODE_VERSION}"
+              nvm use "${NODE_VERSION}"
+            fi
+
+            git fetch --prune origin
+            git reset --hard "origin/${DEPLOY_BRANCH}"
 
             echo "==> Installing deps"
             corepack enable
-            corepack prepare pnpm@latest --activate
             pnpm install --frozen-lockfile
 
             echo "==> Build"
             pnpm build
 
-            echo "==> Restart (PM2)"
             mkdir -p logs
-            pm2 reload ecosystem.config.cjs --env production || pm2 start ecosystem.config.cjs --env production
-            pm2 save || true
+
+            if ! command -v pm2 >/dev/null 2>&1; then
+              npm i -g pm2
+            fi
+
+            pm2 startOrReload ecosystem.config.cjs --update-env
+            pm2 save
+
+      - name: Deploy over SSH (key)
+        uses: appleboy/ssh-action@v1.2.2
+        if: ${{ env.SSH_PASS == '' && env.SSH_KEY != '' }}
+        with:
+          host: ${{ env.SSH_IP }}
+          username: ${{ env.SSH_USER }}
+          key: ${{ env.SSH_KEY }}
+          port: ${{ env.SSH_PORT || 22 }}
+          script_stop: true
+          envs: DEPLOY_PATH,DEPLOY_BRANCH,NODE_VERSION
+          script: |
+            set -euo pipefail
+
+            : "${DEPLOY_PATH:?Missing DEPLOY_PATH}"
+            : "${DEPLOY_BRANCH:=main}"
+            : "${NODE_VERSION:=22}"
+
+            if [ ! -d "$DEPLOY_PATH/.git" ]; then
+              echo "Deploy path is not a git repository: $DEPLOY_PATH" >&2
+              exit 1
+            fi
+
+            cd "$DEPLOY_PATH"
+
+            export NVM_DIR="$HOME/.nvm"
+            if [ -s "$NVM_DIR/nvm.sh" ]; then
+              . "$NVM_DIR/nvm.sh"
+              nvm install "${NODE_VERSION}"
+              nvm use "${NODE_VERSION}"
+            fi
+
+            git fetch --prune origin
+            git reset --hard "origin/${DEPLOY_BRANCH}"
+
+            echo "==> Installing deps"
+            corepack enable
+            pnpm install --frozen-lockfile
+
+            echo "==> Build"
+            pnpm build
+
+            mkdir -p logs
+
+            if ! command -v pm2 >/dev/null 2>&1; then
+              npm i -g pm2
+            fi
+
+            pm2 startOrReload ecosystem.config.cjs --update-env
+            pm2 save

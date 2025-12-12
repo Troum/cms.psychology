@@ -1,12 +1,11 @@
 import type { FieldHook } from 'payload'
-import { useTransliterate } from '@/composables/useTransliterate'
+import { transliterate } from '@/composables/useTransliterate'
 
-// @ts-ignore
 export const generateSlug: FieldHook<any, string> = async ({ data, value, req, collection }) => {
   if (value) return value
   if (!data?.title) return
 
-  const slugBase = useTransliterate(data.title)
+  const slugBase = transliterate(data.title)
   let slug = slugBase
   let count = 1
 

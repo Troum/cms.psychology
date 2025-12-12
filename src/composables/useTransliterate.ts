@@ -1,4 +1,4 @@
-export const useTransliterate = (text: string): string => {
+export const transliterate = (text: string): string => {
   const map: Record<string, string> = {
     а: 'a', б: 'b', в: 'v', г: 'g', д: 'd',
     е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i',
@@ -18,3 +18,6 @@ export const useTransliterate = (text: string): string => {
     .trim()
     .replace(/\s+/g, '-');
 };
+
+// Backward-compatible alias (this is NOT a React hook).
+export const useTransliterate = transliterate;
