@@ -1,7 +1,7 @@
 import type { FieldHook } from 'payload'
 import { transliterate } from '@/composables/useTransliterate'
 
-export const generateSlug: FieldHook<any, string> = async ({ data, value, req, collection }) => {
+export const generateSlug: FieldHook<any, string | undefined> = async ({ data, value, req, collection }) => {
   if (value) return value
   if (!data?.title) return
 

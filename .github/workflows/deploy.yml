@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - 'cursor/**'
   workflow_dispatch:
 
 concurrency:
@@ -23,7 +24,8 @@ jobs:
       SSH_KEY: ${{ secrets.SSH_KEY }}
       DEPLOY_PATH: ${{ secrets.SSH_PATH }}
 
-      DEPLOY_BRANCH: main
+      # If you want to pin a branch, add Actions secret DEPLOY_BRANCH.
+      DEPLOY_BRANCH: ${{ secrets.DEPLOY_BRANCH || github.ref_name }}
       NODE_VERSION: '22'
 
     steps:
