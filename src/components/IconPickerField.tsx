@@ -9,11 +9,23 @@ const IconPickerClient = dynamic(
   () => import('./IconPickerClient').then((mod) => ({ default: mod.IconPickerClient })),
   {
     ssr: false,
-    loading: () => <div style={{ padding: '20px', textAlign: 'center' }}>Загрузка...</div>,
+    // Важно: не рендерить текстовый "loading" на первом рендере,
+    // иначе в production возможен mismatch гидрации (React error #418).
+    loading: () => null,
   },
 )
 
 export const IconPickerField: TextFieldClientComponent = (props) => {
+  // Гарантируем, что серверный HTML и первый клиентский рендер совпадают (оба null),
+  // а уже после mount подгружаем динамический компонент.
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
+
   return <IconPickerClient {...props} />
 }
 
