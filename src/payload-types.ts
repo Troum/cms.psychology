@@ -90,8 +90,12 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    about: About;
+  };
+  globalsSelect: {
+    about: AboutSelect<false> | AboutSelect<true>;
+  };
   locale: 'ru' | 'en';
   user: User & {
     collection: 'users';
@@ -196,6 +200,23 @@ export interface Post {
  */
 export interface Page {
   id: number;
+  /**
+   * These fields are used by the Nuxt /about page layout.
+   */
+  about?: {
+    heroImage?: (number | null) | Media;
+    heroImageCaption?: string | null;
+    tagline?: string | null;
+    sections?:
+      | {
+          text: string;
+          id?: string | null;
+        }[]
+      | null;
+    ctaTitle?: string | null;
+    ctaSubtitle?: string | null;
+    ctaButton?: string | null;
+  };
   title: string;
   subTitle?: string | null;
   menuTitle?: string | null;
@@ -214,7 +235,10 @@ export interface Page {
     };
     [k: string]: unknown;
   };
-  slug?: string | null;
+  /**
+   * URL path, e.g. "about". If empty, it will be generated from the title.
+   */
+  slug: string;
   updatedAt: string;
   createdAt: string;
 }
@@ -363,6 +387,22 @@ export interface PostsSelect<T extends boolean = true> {
  * via the `definition` "pages_select".
  */
 export interface PagesSelect<T extends boolean = true> {
+  about?:
+    | T
+    | {
+        heroImage?: T;
+        heroImageCaption?: T;
+        tagline?: T;
+        sections?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        ctaTitle?: T;
+        ctaSubtitle?: T;
+        ctaButton?: T;
+      };
   title?: T;
   subTitle?: T;
   menuTitle?: T;
@@ -416,6 +456,54 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about".
+ */
+export interface About {
+  id: number;
+  heroImage?: (number | null) | Media;
+  title?: string | null;
+  subtitle?: string | null;
+  tagline?: string | null;
+  sections?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  ctaTitle?: string | null;
+  ctaSubtitle?: string | null;
+  ctaButton?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about_select".
+ */
+export interface AboutSelect<T extends boolean = true> {
+  heroImage?: T;
+  title?: T;
+  subtitle?: T;
+  tagline?: T;
+  sections?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  ctaTitle?: T;
+  ctaSubtitle?: T;
+  ctaButton?: T;
+  seoTitle?: T;
+  seoDescription?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

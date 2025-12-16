@@ -12,6 +12,7 @@ import { Media } from './collections/Media'
 import { Posts } from '@/collections/Posts'
 import { Pages } from '@/collections/Pages'
 import { Links } from '@/collections/Links'
+import { About } from '@/globals/About'
 import { en } from '@payloadcms/translations/languages/en'
 import { ru } from '@payloadcms/translations/languages/ru'
 
@@ -27,6 +28,7 @@ export default buildConfig({
   },
   cors: '*',
   collections: [Users, Media, Posts, Pages, Links],
+  globals: [About],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
