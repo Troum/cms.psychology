@@ -4,7 +4,7 @@ module.exports = {
       name: 'cms-psychology',
       script: 'pnpm',
       args: 'run dev',
-      cwd: '/var/www/cms.psychology',
+      cwd: '/var/www/cms.rozenkrants.online',
       interpreter: 'none',
       exec_mode: 'fork',
       watch: false,
