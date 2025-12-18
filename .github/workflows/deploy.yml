@@ -13,36 +13,10 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Install sshpass
+        run: sudo apt-get update -y && sudo apt-get install -y sshpass
 
-      - name: Install sshpass + rsync
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y sshpass rsync
-
-      - name: Sync project to server
-        env:
-          SSH_IP: ${{ secrets.SSH_IP }}
-          SSH_USER: ${{ secrets.SSH_USER }}
-          SSH_PASS: ${{ secrets.SSH_PASS }}
-          SSH_PATH: ${{ secrets.SSH_PATH }}
-        run: |
-          set -euo pipefail
-          sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_IP" "mkdir -p '$SSH_PATH'"
-
-          # Важно: не трогаем базу/медиа/логи и .env на сервере
-          sshpass -p "$SSH_PASS" rsync -az --delete \
-            --exclude ".git/" \
-            --exclude "node_modules/" \
-            --exclude ".next/" \
-            --exclude ".env" --exclude ".env.*" \
-            --exclude "cms-psychology.db" --exclude "cms-psychology.db*" \
-            --exclude "media/" \
-            --exclude "logs/" \
-            ./ "$SSH_USER@$SSH_IP:$SSH_PATH/"
-
-      - name: Install, build, restart PM2
+      - name: Deploy via SSH
         env:
           SSH_IP: ${{ secrets.SSH_IP }}
           SSH_USER: ${{ secrets.SSH_USER }}
@@ -54,26 +28,20 @@ jobs:
             set -euo pipefail
             cd \"$SSH_PATH\"
 
-            if ! command -v node >/dev/null 2>&1; then
-              echo \"node is not installed on server\" >&2
-              exit 1
-            fi
+            echo \"==> Git pull\"
+            git fetch --prune origin
+            git reset --hard origin/main
 
-            if ! command -v pm2 >/dev/null 2>&1; then
-              echo \"pm2 is not installed on server\" >&2
-              exit 1
-            fi
-
-            # pnpm через corepack (node >=16.13)
+            echo \"==> Install dependencies\"
             corepack enable
             pnpm install --frozen-lockfile
 
             mkdir -p logs
 
+            echo \"==> PM2 restart (dev mode)\"
             export NODE_ENV=development
             export PORT=4208
 
-            # PM2 запускаем через bash с pnpm dev
             if pm2 describe cms-psychology >/dev/null 2>&1; then
               pm2 restart cms-psychology --update-env
             else
@@ -82,5 +50,3 @@ jobs:
 
             pm2 save
           '"
-
-
