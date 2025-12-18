@@ -24,29 +24,43 @@ jobs:
           SSH_PATH: ${{ secrets.SSH_PATH }}
         run: |
           set -euo pipefail
-          sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_IP" "bash -lc '
+          sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_USER@$SSH_IP" 'bash -l << "DEPLOY_SCRIPT"
             set -euo pipefail
-            cd \"$SSH_PATH\"
+            cd "'"$SSH_PATH"'"
 
-            echo \"==> Git pull\"
+            echo "==> Git pull"
             git fetch --prune origin
             git reset --hard origin/main
 
-            echo \"==> Install dependencies\"
+            echo "==> Load nvm"
+            export NVM_DIR="${HOME}/.nvm"
+            if [ -s "${NVM_DIR}/nvm.sh" ]; then
+              . "${NVM_DIR}/nvm.sh"
+            elif [ -s "/usr/local/nvm/nvm.sh" ]; then
+              . "/usr/local/nvm/nvm.sh"
+            else
+              echo "nvm not found" >&2
+              exit 1
+            fi
+
+            nvm install
+            nvm use
+
+            echo "==> Install dependencies"
             corepack enable
             pnpm install --frozen-lockfile
 
             mkdir -p logs
 
-            echo \"==> PM2 restart (dev mode)\"
+            echo "==> PM2 restart (dev mode)"
             export NODE_ENV=development
             export PORT=4208
 
             if pm2 describe cms-psychology >/dev/null 2>&1; then
               pm2 restart cms-psychology --update-env
             else
-              pm2 start bash --name cms-psychology --time -- -lc \"cd $SSH_PATH && corepack enable && pnpm run dev\"
+              pm2 start pnpm --name cms-psychology --time -- run dev
             fi
 
             pm2 save
-          '"
+          DEPLOY_SCRIPT'
